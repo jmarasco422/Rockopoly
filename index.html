@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rockopoly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#1A1640;
+  --felt:#241F55;
+  --felt-2:#2E2868;
+  --line:#3E3786;
+  --cream:#FFF4D6;
+  --muted:#B9B2E6;
+  --marigold:#FFB627;
+  --coral:#FF5D73;
+  --teal:#2EC4B6;
+  --sky:#4D9DE0;
+  --violet:#9B5DE5;
+  --doom:#E5383B;
+  --good:#3DDC97;
+  --bad:#FF5D73;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--night);
+  background-image:radial-gradient(circle at 50% -10%, #2C2675 0%, var(--night) 55%);
+  background-attachment:fixed;
+  color:var(--cream);
+  font-family:"Bricolage Grotesque",system-ui,sans-serif;
+  font-size:16px;line-height:1.5;
+  min-height:100vh;
+}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--marigold);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 64px}
+
+/* header */
+header.top{display:grid;grid-template-columns:auto 1fr;gap:12px 28px;align-items:end;margin-bottom:18px}
+.brand{font-family:Bungee,sans-serif;font-size:clamp(2rem,6vw,3.4rem);line-height:.9;letter-spacing:.01em;margin:0;
+  background:linear-gradient(180deg,var(--marigold) 0 55%,#FF8A3D 55% 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 #0F0C2A)}
+.season-tag{color:var(--muted);font-size:.95rem;margin-top:6px}
+.bankbox{justify-self:end;text-align:right}
+.bank-num{font-family:Bungee,sans-serif;font-size:clamp(2.6rem,9vw,4.6rem);line-height:.9;color:var(--cream)}
+.bank-sub{color:var(--muted);font-size:.95rem}
+.track{grid-column:1/-1;position:relative;height:44px;margin-top:4px}
+.track-bar{position:absolute;left:0;right:0;top:14px;height:14px;border-radius:7px;background:var(--felt);border:2px solid var(--line);overflow:hidden}
+.track-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--marigold));transition:width .5s ease}
+.track-mark{position:absolute;top:6px;width:2px;height:30px;background:var(--cream);opacity:.7}
+.track-mark span{position:absolute;top:30px;left:50%;transform:translateX(-50%);font-size:.75rem;color:var(--muted);white-space:nowrap}
+.clock{grid-column:1/-1;display:flex;gap:10px;align-items:center;color:var(--muted);font-size:.95rem}
+.clock-bar{flex:1;height:6px;background:var(--felt);border-radius:3px;overflow:hidden}
+.clock-fill{height:100%;background:var(--sky)}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.chip{border:2px solid var(--line);background:var(--felt);border-radius:999px;padding:4px 12px;font-size:.9rem;color:var(--muted)}
+.chip b{color:var(--cream);font-weight:800}
+.chip.hot{border-color:var(--marigold);color:var(--cream)}
+.chip.doom{border-color:var(--doom);background:#3A1835;color:var(--cream)}
+.chip.ride{border-color:var(--teal);color:var(--cream)}
+.chip.noquit{border-color:var(--coral);color:var(--cream)}
+.chip.okquit{border-color:var(--good)}
+
+/* tabs */
+nav.tabs{display:flex;gap:4px;margin:18px 0 18px;border-bottom:2px solid var(--line);overflow-x:auto}
+nav.tabs button{background:none;border:0;padding:10px 16px;color:var(--muted);font-weight:600;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--cream);border-bottom-color:var(--marigold)}
+.panel[hidden]{display:none}
+
+/* play */
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.wheelcard{background:var(--felt);border:2px solid var(--line);border-radius:22px;padding:18px;display:flex;flex-direction:column;align-items:center}
+.wheelcard h2{font-family:Bungee,sans-serif;font-weight:400;font-size:1.15rem;margin:0 0 10px;color:var(--marigold);align-self:flex-start}
+.wheel-wrap{position:relative;width:min(100%,320px);aspect-ratio:1}
+.wheel-wrap svg.wheel{pointer-events:none;width:100%;height:100%;transition:transform 3.4s cubic-bezier(.12,.72,.12,1);will-change:transform}
+.pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:28px solid var(--cream);filter:drop-shadow(0 3px 0 #0F0C2A);z-index:2}
+.hub{position:absolute;inset:0;margin:auto;width:20%;height:20%;border-radius:50%;background:var(--night);border:4px solid var(--cream);display:grid;place-items:center;font-family:Bungee;font-size:.8rem;color:var(--cream)}
+.spin-btn{margin-top:16px;font-family:Bungee,sans-serif;font-size:1.05rem;padding:12px 26px;border-radius:999px;border:0;background:var(--marigold);color:#2A1A00;cursor:pointer;box-shadow:0 4px 0 #B87900}
+.spin-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #B87900}
+.spin-btn:disabled{background:var(--felt-2);color:var(--muted);box-shadow:none;cursor:not-allowed}
+.result{min-height:3.2em;margin-top:12px;text-align:center}
+.result .big{font-family:Bungee,sans-serif;font-size:1.6rem;line-height:1.1}
+.result .small{color:var(--muted);font-size:.92rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;margin-top:10px;font-size:.82rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+
+.ridecard{grid-column:1/-1;border:2px dashed var(--teal);border-radius:18px;padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:#1F2A5A}
+.ridecard p{margin:0;max-width:60ch}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:2px solid var(--line);background:var(--felt-2);border-radius:12px;padding:9px 16px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--marigold);border-color:var(--marigold);color:#2A1A00}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:#06302B}
+.btn.danger{border-color:var(--coral);color:var(--coral);background:transparent}
+.btn[aria-pressed="true"]{background:var(--cream);color:var(--night);border-color:var(--cream)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.logcard{grid-column:1/-1;background:var(--felt);border:2px solid var(--line);border-radius:22px;padding:20px}
+.logcard h2{font-family:Bungee,sans-serif;font-weight:400;font-size:1.15rem;margin:0 0 4px;color:var(--marigold)}
+.hint{color:var(--muted);margin:0 0 14px;font-size:.95rem}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px 18px;align-items:end}
+.field label{display:block;font-size:.9rem;color:var(--muted);margin-bottom:4px}
+.field input[type=number],.field input[type=text],textarea{width:100%;background:var(--night);border:2px solid var(--line);border-radius:10px;padding:9px 12px}
+textarea{min-height:64px;resize:vertical}
+.check{display:flex;gap:8px;align-items:center;font-weight:600}
+.check input{width:20px;height:20px;accent-color:var(--coral)}
+.preview{margin-top:16px;border-top:2px solid var(--line);padding-top:14px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
+.preview ul{list-style:none;margin:0;padding:0}
+.preview li{display:flex;justify-content:space-between;gap:16px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.preview .tot{font-family:Bungee,sans-serif;font-size:2rem;line-height:1}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.err{color:var(--coral);font-weight:600;margin:10px 0 0}
+
+.ending{grid-column:1/-1;border-radius:22px;padding:24px;border:3px solid var(--marigold);background:var(--felt)}
+.ending h2{font-family:Bungee,sans-serif;font-weight:400;font-size:clamp(1.6rem,5vw,2.4rem);margin:0 0 6px}
+.ending .pun{background:var(--night);border-radius:14px;padding:12px 16px;margin:12px 0;white-space:pre-wrap}
+.ending.trip{border-color:var(--good)}
+.ending.bad{border-color:var(--doom)}
+
+/* log table */
+.tablewrap{overflow-x:auto;border:2px solid var(--line);border-radius:16px}
+table{border-collapse:collapse;width:100%;font-size:.93rem;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:600;background:var(--felt)}
+td.why{white-space:normal;min-width:220px;color:var(--muted);font-size:.88rem}
+tr.win td:first-child{box-shadow:inset 4px 0 0 var(--good)}
+tr.loss td:first-child{box-shadow:inset 4px 0 0 var(--bad)}
+.empty{color:var(--muted);padding:24px;text-align:center}
+
+/* stats */
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--felt);border:2px solid var(--line);border-radius:16px;padding:12px 14px}
+.stat .v{font-family:Bungee,sans-serif;font-size:1.6rem;line-height:1.1}
+.stat .k{color:var(--muted);font-size:.88rem}
+h3.sec{font-family:Bungee,sans-serif;font-weight:400;color:var(--marigold);font-size:1.05rem;margin:24px 0 10px}
+.chart{background:var(--felt);border:2px solid var(--line);border-radius:16px;padding:12px}
+.chart svg{width:100%;height:auto;display:block}
+
+/* rules */
+.rules{max-width:72ch}
+.rules h3{font-family:Bungee,sans-serif;font-weight:400;color:var(--marigold);font-size:1.05rem;margin:22px 0 6px}
+.rules table{margin:6px 0 10px}
+.rules p,.rules li{color:#E9E2FF}
+
+.setup{display:grid;gap:16px;max-width:760px}
+.box{background:var(--felt);border:2px solid var(--line);border-radius:18px;padding:16px 18px}
+.box h3{margin:0 0 10px;font-family:Bungee,sans-serif;font-weight:400;color:var(--marigold);font-size:1.05rem}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--cream);color:var(--night);font-weight:800;padding:10px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+
+@media (max-width:760px){
+  header.top{grid-template-columns:1fr}
+  .bankbox{justify-self:start;text-align:left}
+  .stage{grid-template-columns:1fr}
+  .preview{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .wheel-wrap svg.wheel{transition-duration:.6s}
+  .track-fill{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1 class="brand">Rockopoly</h1>
+      <div class="season-tag" id="seasonTag"></div>
+    </div>
+    <div class="bankbox">
+      <div class="bank-num" id="bankNum">25</div>
+      <div class="bank-sub" id="bankSub"></div>
+    </div>
+    <div class="track" aria-hidden="true">
+      <div class="track-bar"><div class="track-fill" id="trackFill"></div></div>
+      <div class="track-mark" id="markClose"><span>75 close call</span></div>
+    </div>
+    <div class="clock"><span id="clockText"></span><div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div></div>
+  </header>
+
+  <div class="chips" id="chips" aria-live="polite"></div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="play">Play</button>
+    <button role="tab" aria-selected="false" data-tab="log">Game log</button>
+    <button role="tab" aria-selected="false" data-tab="stats">Stats</button>
+    <button role="tab" aria-selected="false" data-tab="rules">Rules</button>
+    <button role="tab" aria-selected="false" data-tab="setup">Setup</button>
+  </nav>
+
+  <section class="panel" id="panel-play">
+    <div class="stage" id="stage"></div>
+  </section>
+  <section class="panel" id="panel-log" hidden></section>
+  <section class="panel" id="panel-stats" hidden></section>
+  <section class="panel" id="panel-rules" hidden></section>
+  <section class="panel" id="panel-setup" hidden></section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============ constants ============ */
+const KEY = 'rockopoly.v1';
+const DEFAULTS = {start:25, target:100, cap:100, rebuyBank:15, rebuyAdd:10, closeLine:75};
+const BASE_SEGS = [
+  {key:1,w:22},{key:2,w:12},{key:1,w:23},{key:3,w:10},{key:1,w:22},{key:2,w:11}
+];
+const BASE_COLORS = {1:'#4A42A0',2:'#FF5D73',3:'#FFB627'};
+const BASE_TEXT = {1:'#FFF4D6',2:'#2A0710',3:'#2A1A00'};
+const INC = {
+  none:{label:'Nothing',color:'#332D78',text:'#B9B2E6'},
+  dbl:{label:'Double Up',color:'#2EC4B6',text:'#06302B'},
+  show:{label:'The Show',color:'#4D9DE0',text:'#071E33'},
+  wall:{label:'The Wall',color:'#9B5DE5',text:'#1B0733'},
+  doom:{label:'Doomsday',color:'#E5383B',text:'#FFF4D6'},
+  jack:{label:'Jackpot',color:'#FFB627',text:'#2A1A00'}
+};
+const INC_SEGS = [
+  {key:'none',w:17},{key:'dbl',w:5},{key:'show',w:8},{key:'none',w:17},{key:'doom',w:4},
+  {key:'dbl',w:5},{key:'none',w:17},{key:'wall',w:8},{key:'none',w:17},{key:'jack',w:2}
+];
+const INC_ODDS = {none:68,dbl:10,show:8,wall:8,doom:4,jack:2};
+
+/* ============ state ============ */
+function freshSeason(num, cfg){
+  return {num, bank:cfg.start, target:cfg.target, games:[], heat:0, doomLeft:0,
+    ride:0, rideOffer:0, rideDecided:false, rebuyUsed:false, rebuyAtGame:null,
+    status:'active', spin:{base:null, inc:null, rerolled:false}, peak:cfg.start, cap:cfg.cap, closeLine:cfg.closeLine, startedAt:new Date().toISOString()};
+}
+function freshState(){
+  return {v:1, names:{a:'Jon', b:'Luke'}, cfg:{...DEFAULTS},
+    punish:{half:'', full:'', double:'Frozen Night: sleep outside in a tent on the first night it drops below 25°F. No heater, phones stay inside.'},
+    season:freshSeason(1, DEFAULTS), history:[]};
+}
+let S;
+function seasonCfg(se){ return {...S.cfg, cap: se.cap ?? S.cfg.cap, closeLine: se.closeLine ?? S.cfg.closeLine}; }
+function load(){
+  try{ const raw = localStorage.getItem(KEY); S = raw ? JSON.parse(raw) : freshState(); }
+  catch(e){ S = freshState(); }
+  if(!S || !S.season) S = freshState();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ============ helpers ============ */
+const $ = s => document.querySelector(s);
+const rnd = () => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296; };
+const sgn = n => (n>0?'+':n<0?'−':'±') + Math.abs(n);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function incLabel(k){ if(k==='show') return `The ${S.names.a} Show`; return INC[k].label; }
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ============ rules engine ============ */
+/* input: {result:'win'|'loss'|'ffw'|'ffl', us, them, aGoals, bScored, bSaves, aSaved} */
+function computeGame(se, input){
+  const base = se.spin.base, inc = se.spin.inc;
+  const win = input.result==='win' || input.result==='ffw';
+  const forfeit = input.result==='ffw' || input.result==='ffl';
+  const us = +input.us||0, them = +input.them||0;
+  const A = S.names.a, B = S.names.b;
+  const parts = [];
+
+  if(inc==='show'){
+    if(input.bScored) parts.push([`${B} scored, show's over`, -3]);
+    else if(win) parts.push([`${A} Show: ${A} scored ${Math.min(+input.aGoals||0,3)}${(+input.aGoals||0)>3?' (capped)':''}`, Math.min(Math.max(+input.aGoals||0,0),3)]);
+    else parts.push([`${A} Show lost clean: base`, -base]);
+  } else if(inc==='wall'){
+    if(input.aSaved) parts.push([`${A} made a save, Wall's broken`, -3]);
+    else if(win){ const raw=(+input.bSaves||0)-them; const v=Math.min(Math.max(raw,1),3); parts.push([`The Wall: ${+input.bSaves||0} saves − ${them} conceded`, v]); }
+    else parts.push([`The Wall lost clean: base`, -base]);
+  } else if(inc==='jack'){
+    parts.push(['Jackpot', win?10:-10]);
+  } else if(inc==='dbl'){
+    parts.push([`Double Up: base ${base} × 2`, win?base*2:-base*2]);
+  } else {
+    parts.push([`Base ${base}`, win?base:-base]);
+  }
+
+  const heat = win ? se.heat+1 : 0;
+  if(win && heat>=3) parts.push([`Heat (${heat} straight)`, 1]);
+
+  if(forfeit){
+    parts.push([win?'They forfeited':'You forfeited', win?1:-1]);
+  } else if(win && (us-them>=3 || them===0)){
+    parts.push([them===0?'Shutout':'Won by 3+', 1]);
+  } else if(!win && (them-us>=3 || us===0)){
+    parts.push([us===0?'Shut out':'Lost by 3+', -1]);
+  }
+
+  if(se.ride>0) parts.push([`Ride ${win?'hit':'busted'}`, win?se.ride:-se.ride]);
+
+  const delta = parts.reduce((a,p)=>a+p[1],0);
+  let bank = se.bank + delta;
+  let doomLeft = se.doomLeft, doomNote = null;
+  if(doomLeft>0){
+    if(!win){ bank = Math.floor(bank/2); doomLeft = 0; doomNote = 'Doomsday failed: bank halved'; }
+    else { doomLeft -= 1; if(doomLeft===0){ bank = Math.floor(bank*1.5); doomNote = 'Doomsday survived: bank ×1.5'; } else doomNote = 'Doomsday: one more win'; }
+  }
+  if(inc==='doom') doomLeft = 2;
+  const offer = (win && delta>0 && doomLeft===0) ? delta : 0;
+  return {parts, delta, bank, doomLeft, doomNote, heat, win, offer};
+}
+
+function validate(input){
+  const inc = S.season.spin.inc;
+  if(!input.result) return 'Pick how the game ended.';
+  const forfeit = input.result==='ffw'||input.result==='ffl';
+  if(!forfeit){
+    if(input.us==='' || input.them==='') return 'Enter the final score.';
+    const us=+input.us, them=+input.them;
+    if(us<0||them<0) return 'Scores can\'t be negative.';
+    if(input.result==='win' && us<=them) return 'A win needs more goals than them.';
+    if(input.result==='loss' && us>=them) return 'A loss needs fewer goals than them.';
+  }
+  if(inc==='show' && (input.result==='win'||input.result==='ffw') && !input.bScored && input.aGoals==='') return `Enter how many goals ${S.names.a} scored.`;
+  if(inc==='wall' && (input.result==='win'||input.result==='ffw') && !input.aSaved && input.bSaves==='') return `Enter ${S.names.b}'s saves.`;
+  return null;
+}
+
+function commitGame(input){
+  const se = S.season;
+  const snapshot = JSON.parse(JSON.stringify({...se, games:undefined}));
+  const r = computeGame(se, input);
+  const g = {n:se.games.length+1, base:se.spin.base, inc:se.spin.inc, rerolled:se.spin.rerolled,
+    result:input.result, us:input.us===''?null:+input.us, them:input.them===''?null:+input.them,
+    parts:r.parts, delta:r.delta, before:se.bank, after:r.bank, doomNote:r.doomNote, ride:se.ride,
+    heat:r.heat, win:r.win, at:new Date().toISOString(), snap:snapshot};
+  se.games.push(g);
+  se.bank = r.bank; se.heat = r.heat; se.doomLeft = r.doomLeft;
+  se.ride = 0; se.rideOffer = r.offer; se.rideDecided = false;
+  se.spin = {base:null, inc:null, rerolled:false};
+  se.peak = Math.max(se.peak, se.bank);
+  resolveEnding();
+  save();
+}
+
+function resolveEnding(){
+  const se = S.season, cfg = seasonCfg(se);
+  if(se.bank >= se.target){ se.status='trip'; return; }
+  if(se.bank <= 0){
+    if(!se.rebuyUsed && se.games.length < cfg.cap) se.status='bust-pending';
+    else se.status = se.rebuyUsed ? 'double' : 'full';
+    return;
+  }
+  if(se.games.length >= cfg.cap){ se.status = se.bank >= cfg.closeLine ? 'close' : 'half'; return; }
+  se.status='active';
+}
+
+function undoLast(){
+  const se = S.season;
+  const g = se.games[se.games.length-1];
+  if(!g) return;
+  const games = se.games.slice(0,-1);
+  S.season = {...g.snap, games};
+  save(); renderAll(); toast(`Game ${g.n} removed`);
+}
+
+function canQuit(){
+  const se = S.season;
+  if(se.status!=='active') return {ok:true, why:''};
+  const last = se.games[se.games.length-1];
+  if(se.doomLeft>0) return {ok:false, why:'Doomsday is live'};
+  if(se.spin.base!==null || se.spin.inc!==null) return {ok:false, why:'Spins are on the board'};
+  if(last && !last.win) return {ok:false, why:'You just lost'};
+  return {ok:true, why:''};
+}
+
+/* ============ wheels ============ */
+function wheelSVG(segs, colorOf, textOf, labelOf){
+  const R=150, C=160; let a0=0; let out='';
+  const pt=(deg,r)=>{ const t=(deg-90)*Math.PI/180; return [C+r*Math.cos(t), C+r*Math.sin(t)]; };
+  segs.forEach(s=>{
+    const a1 = a0 + s.w*3.6;
+    const [x0,y0]=pt(a0,R), [x1,y1]=pt(a1,R);
+    const large = (a1-a0)>180?1:0;
+    out += `<path d="M${C},${C} L${x0.toFixed(2)},${y0.toFixed(2)} A${R},${R} 0 ${large} 1 ${x1.toFixed(2)},${y1.toFixed(2)} Z" fill="${colorOf(s.key)}" stroke="#1A1640" stroke-width="2"/>`;
+    if(s.w>=8 && labelOf(s.key)){
+      const mid=(a0+a1)/2; const [tx,ty]=pt(mid,R*0.62);
+      const lbl = labelOf(s.key); const fs = s.w>=8 ? 15 : 11;
+      out += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" transform="rotate(${mid.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" text-anchor="middle" dominant-baseline="middle" font-family="Bungee, sans-serif" font-size="${fs}" fill="${textOf(s.key)}">${esc(lbl)}</text>`;
+    }
+    a0 = a1;
+  });
+  return `<svg class="wheel" viewBox="0 0 320 320" role="img"><circle cx="${C}" cy="${C}" r="${R+8}" fill="#FFF4D6"/><circle cx="${C}" cy="${C}" r="${R+3}" fill="#1A1640"/>${out}</svg>`;
+}
+const rot = {base:0, inc:0};
+function pickSeg(segs){
+  const r = rnd()*100; let c=0;
+  for(const s of segs){ if(r < c+s.w) return {key:s.key, angle:r*3.6}; c+=s.w; }
+  const s=segs[segs.length-1]; return {key:s.key, angle:99.99*3.6};
+}
+function animateTo(which, angle, done){
+  const svg = document.querySelector(`#wheel-${which} svg.wheel`);
+  const cur = rot[which];
+  let target = (360 - angle) % 360;
+  let delta = ((target - (cur % 360)) + 360) % 360;
+  rot[which] = cur + 360*5 + delta;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ms = reduce ? 650 : 3450;
+  svg.style.transform = `rotate(${rot[which]}deg)`;
+  setTimeout(done, ms);
+}
+let spinning = false;
+function spin(which){
+  if(spinning) return;
+  const se = S.season;
+  if(which==='base' && se.spin.base!==null) return;
+  if(which==='inc' && se.spin.inc!==null) return;
+  spinning = true;
+  if(se.rideOffer>0 && !se.rideDecided){ se.rideDecided = true; se.rideOffer = 0; }
+  if(which==='base'){
+    const p = pickSeg(BASE_SEGS);
+    document.querySelectorAll('.spin-btn').forEach(b=>b.disabled=true);
+    animateTo('base', p.angle, ()=>{ se.spin.base = p.key; spinning=false; save(); renderAll(); });
+  } else {
+    let p = pickSeg(INC_SEGS); let rerolled=false;
+    if(p.key==='doom' && se.doomLeft>0){ rerolled=true; do{ p = pickSeg(INC_SEGS); } while(p.key==='doom'); }
+    document.querySelectorAll('.spin-btn').forEach(b=>b.disabled=true);
+    animateTo('inc', p.angle, ()=>{ se.spin.inc = p.key; se.spin.rerolled = rerolled; spinning=false; save(); renderAll(); });
+  }
+}
+
+/* ============ render: header ============ */
+function renderHeader(){
+  const se = S.season, cfg = seasonCfg(se);
+  $('#seasonTag').textContent = `Season ${se.num}, ${S.names.a} & ${S.names.b}`;
+  $('#bankNum').textContent = se.bank;
+  $('#bankSub').textContent = `points banked, ${Math.max(se.target - se.bank,0)} to the trip at ${se.target}`;
+  const pct = Math.max(0, Math.min(1, se.bank/se.target));
+  $('#trackFill').style.width = (pct*100)+'%';
+  $('#markClose').style.left = (cfg.closeLine/se.target*100)+'%';
+  const played = se.games.length;
+  const next = se.status==='active' ? Math.min(played+1, cfg.cap) : played;
+  $('#clockText').textContent = se.status==='active' ? `Game ${next} of ${cfg.cap}` : `${played} games played`;
+  $('#clockFill').style.width = (played/cfg.cap*100)+'%';
+
+  const chips = [];
+  if(se.status==='active'){
+    chips.push(se.heat>=3 ? `<span class="chip hot">Heat: <b>${se.heat}</b> straight, wins pay +1</span>` : `<span class="chip">Win streak <b>${se.heat}</b>, heat starts at 3</span>`);
+    if(se.doomLeft>0) chips.push(`<span class="chip doom">Doomsday live: win the next <b>${se.doomLeft}</b></span>`);
+    if(se.ride>0) chips.push(`<span class="chip ride">Riding <b>${se.ride}</b> on this game</span>`);
+    chips.push(`<span class="chip">Rebuy <b>${se.rebuyUsed?'used':'available'}</b></span>`);
+    const q = canQuit();
+    chips.push(q.ok ? `<span class="chip okquit">Safe to quit</span>` : `<span class="chip noquit">Can't quit: <b>${q.why}</b></span>`);
+  }
+  $('#chips').innerHTML = chips.join('');
+}
+
+/* ============ render: play ============ */
+let form = {result:null, us:'', them:'', aGoals:'', bScored:false, bSaves:'', aSaved:false};
+function resetForm(){ form = {result:null, us:'', them:'', aGoals:'', bScored:false, bSaves:'', aSaved:false}; }
+
+function renderPlay(){
+  const se = S.season;
+  const st = $('#stage');
+  if(se.status!=='active'){ st.innerHTML = endingHTML(); bindEnding(); return; }
+
+  let html = '';
+  if(se.rideOffer>0 && !se.rideDecided && se.spin.base===null && se.spin.inc===null){
+    html += `<div class="ridecard"><p><b>Let it ride?</b> Last game paid <b>+${se.rideOffer}</b>. Ride it and those ${se.rideOffer} are bet again on this game. Both of you have to agree. Spinning without choosing banks it.</p>
+      <div class="btnrow"><button class="btn teal" id="rideYes">Ride ${se.rideOffer}</button><button class="btn" id="rideNo">Bank it</button></div></div>`;
+  }
+  const baseRes = se.spin.base!==null ? `<div class="big" style="color:${se.spin.base===1?'var(--cream)':BASE_COLORS[se.spin.base]}">${se.spin.base} point${se.spin.base>1?'s':''}</div><div class="small">Win +${se.spin.base}, lose −${se.spin.base}</div>` : `<div class="small">Spin before kickoff</div>`;
+  const incRes = se.spin.inc!==null ? `<div class="big" style="color:${INC[se.spin.inc].color}">${incLabel(se.spin.inc)}</div><div class="small">${incDesc(se.spin.inc)}${se.spin.rerolled?' (Doomsday re-rolled)':''}</div>` : `<div class="small">${se.spin.base===null?'Spin the base first':'Spin before kickoff'}</div>`;
+
+  html += `<div class="wheelcard"><h2>Base</h2>
+    <div class="wheel-wrap" id="wheel-base"><div class="pointer"></div>${wheelSVG(BASE_SEGS, k=>BASE_COLORS[k], k=>BASE_TEXT[k], k=>String(k))}<div class="hub">±</div></div>
+    <button class="spin-btn" id="spinBase" ${se.spin.base!==null?'disabled':''}>${se.spin.base!==null?'Locked':'Spin base'}</button>
+    <div class="result" aria-live="polite">${baseRes}</div>
+    <div class="legend"><span><i style="background:${BASE_COLORS[1]}"></i>1 · 67%</span><span><i style="background:${BASE_COLORS[2]}"></i>2 · 23%</span><span><i style="background:${BASE_COLORS[3]}"></i>3 · 10%</span></div>
+  </div>
+  <div class="wheelcard"><h2>The wheel</h2>
+    <div class="wheel-wrap" id="wheel-inc"><div class="pointer"></div>${wheelSVG(INC_SEGS, k=>INC[k].color, k=>INC[k].text, k=> k==='none'?'': k==='show'?'Show':INC[k].label.replace('The ',''))}<div class="hub">?</div></div>
+    <button class="spin-btn" id="spinInc" ${(se.spin.inc!==null||se.spin.base===null)?'disabled':''}>${se.spin.inc!==null?'Locked':'Spin the wheel'}</button>
+    <div class="result" aria-live="polite">${incRes}</div>
+    <div class="legend">${Object.keys(INC_ODDS).map(k=>`<span><i style="background:${INC[k].color}"></i>${incLabel(k)} · ${INC_ODDS[k]}%</span>`).join('')}</div>
+  </div>`;
+
+  if(se.spin.base!==null && se.spin.inc!==null) html += logFormHTML();
+  st.innerHTML = html;
+
+  ['base','inc'].forEach(w=>{ const svg=document.querySelector(`#wheel-${w} svg.wheel`); if(svg){ svg.style.transition='none'; svg.style.transform=`rotate(${rot[w]}deg)`; svg.getBoundingClientRect(); svg.style.transition=''; } });
+
+  const sb=$('#spinBase'), si=$('#spinInc');
+  if(sb) sb.onclick=()=>spin('base');
+  if(si) si.onclick=()=>spin('inc');
+  const ry=$('#rideYes'), rn=$('#rideNo');
+  if(ry) ry.onclick=()=>{ se.ride=se.rideOffer; se.rideOffer=0; se.rideDecided=true; save(); renderAll(); toast(`Riding ${se.ride}`); };
+  if(rn) rn.onclick=()=>{ se.rideOffer=0; se.rideDecided=true; save(); renderAll(); toast('Banked'); };
+  if(se.spin.base!==null && se.spin.inc!==null) bindForm();
+}
+
+function incDesc(k){
+  const A=S.names.a, B=S.names.b;
+  return {
+    none:'Play it straight.',
+    dbl:'Base × 2, both ways.',
+    show:`${A} scores every goal. Win: +${A}'s goals (max 3). ${B} scores: −3.`,
+    wall:`Only ${B} makes saves. Win: saves − conceded (1 to 3). ${A} saves: −3.`,
+    doom:'Play this one normally, then win the next 2. Survive: bank ×1.5. Lose: halved.',
+    jack:'+10 or −10. That\'s it.'
+  }[k];
+}
+
+function logFormHTML(){
+  const inc = S.season.spin.inc, A=S.names.a, B=S.names.b;
+  const res = [['win','Win'],['loss','Loss'],['ffw','They forfeited'],['ffl','We forfeited']];
+  let extra = '';
+  if(inc==='show') extra = `<div class="field"><label for="fAGoals">${A}'s goals</label><input type="number" min="0" id="fAGoals" value="${esc(form.aGoals)}"></div>
+     <label class="check"><input type="checkbox" id="fBScored" ${form.bScored?'checked':''}> ${B} scored a goal</label>`;
+  if(inc==='wall') extra = `<div class="field"><label for="fBSaves">${B}'s saves</label><input type="number" min="0" id="fBSaves" value="${esc(form.bSaves)}"></div>
+     <label class="check"><input type="checkbox" id="fASaved" ${form.aSaved?'checked':''}> ${A} made a save</label>`;
+  return `<div class="logcard"><h2>Log the game</h2>
+    <p class="hint">Use the post-game scoreboard. Scoreboard credit is final.</p>
+    <div class="btnrow" role="group" aria-label="Result" style="margin-bottom:14px">${res.map(([k,l])=>`<button class="btn" data-res="${k}" aria-pressed="${form.result===k}">${l}</button>`).join('')}</div>
+    <div class="formgrid">
+      <div class="field"><label for="fUs">Our goals</label><input type="number" min="0" id="fUs" value="${esc(form.us)}"></div>
+      <div class="field"><label for="fThem">Their goals</label><input type="number" min="0" id="fThem" value="${esc(form.them)}"></div>
+      ${extra}
+    </div>
+    <div id="previewBox"></div>
+  </div>`;
+}
+
+function bindForm(){
+  document.querySelectorAll('[data-res]').forEach(b=>b.onclick=()=>{ form.result=b.dataset.res; document.querySelectorAll('[data-res]').forEach(x=>x.setAttribute('aria-pressed', x===b)); renderPreview(); });
+  const map = {fUs:'us',fThem:'them',fAGoals:'aGoals',fBSaves:'bSaves'};
+  Object.entries(map).forEach(([id,k])=>{ const el=document.getElementById(id); if(el) el.oninput=()=>{ form[k]=el.value; renderPreview(); }; });
+  const bs=$('#fBScored'); if(bs) bs.onchange=()=>{ form.bScored=bs.checked; renderPreview(); };
+  const as=$('#fASaved'); if(as) as.onchange=()=>{ form.aSaved=as.checked; renderPreview(); };
+  renderPreview();
+}
+
+function renderPreview(){
+  const box = $('#previewBox'); if(!box) return;
+  const err = validate(form);
+  if(err){ box.innerHTML = form.result ? `<p class="err">${err}</p>` : ''; return; }
+  const r = computeGame(S.season, form);
+  box.innerHTML = `<div class="preview"><div><ul>${r.parts.map(p=>`<li><span>${esc(p[0])}</span><b class="${p[1]>=0?'pos':'neg'}">${sgn(p[1])}</b></li>`).join('')}
+    ${r.doomNote?`<li><span>${r.doomNote}</span><b></b></li>`:''}</ul></div>
+    <div style="text-align:right"><div class="tot ${r.delta>=0?'pos':'neg'}">${sgn(r.delta)}</div><div class="small" style="color:var(--muted)">Bank ${S.season.bank} → <b style="color:var(--cream)">${r.bank}</b></div>
+    <button class="btn primary" id="commit" style="margin-top:10px">Log game ${S.season.games.length+1}</button></div></div>`;
+  $('#commit').onclick=()=>{ const n=S.season.games.length+1; commitGame(form); resetForm(); renderAll(); toast(`Game ${n} logged`); };
+}
+
+/* ============ endings ============ */
+function endingHTML(){
+  const se=S.season, P=S.punish, cfg=seasonCfg(se);
+  const pun = t => `<div class="pun">${t?esc(t):'<i>No punishment written down. You were supposed to do that before game 1.</i>'}</div>`;
+  const next = `<button class="btn primary" id="newSeason">Start season ${se.num+1}</button>`;
+  switch(se.status){
+    case 'trip': return `<div class="ending trip"><h2>You hit ${se.target}. Book the trip.</h2><p>Season ${se.num} done in ${se.games.length} games. Plan it and take it within one calendar year.</p>${next}</div>`;
+    case 'close': return `<div class="ending"><h2>Close call</h2><p>Survived ${cfg.cap} games and finished at ${se.bank}. No trip, no punishment. Just shame.</p>${next}</div>`;
+    case 'half': return `<div class="ending bad"><h2>Time's up</h2><p>${cfg.cap} games, finished at ${se.bank}, under ${cfg.closeLine}. Half punishment:</p>${pun(P.half)}${next}</div>`;
+    case 'full': return `<div class="ending bad"><h2>Bust</h2><p>Bank hit ${se.bank}. Full punishment:</p>${pun(P.full)}${next}</div>`;
+    case 'double': return `<div class="ending bad"><h2>Bust after the rebuy</h2><p>You bought back in and went broke again. Double punishment:</p>${pun(P.double)}${next}</div>`;
+    case 'bust-pending': return `<div class="ending bad"><h2>Bust</h2><p>The bank hit ${se.bank}. You get one rebuy per season: back to ${cfg.rebuyBank}, the target goes up to ${se.target+cfg.rebuyAdd}, and if you bust again it's the double punishment.</p>
+      <div class="btnrow"><button class="btn primary" id="rebuy">Rebuy</button><button class="btn danger" id="takeBust">Take the bust</button></div>
+      <p class="hint" style="margin-top:12px">Taking the bust means the full punishment:</p>${pun(P.full)}</div>`;
+  }
+  return '';
+}
+function bindEnding(){
+  const n=$('#newSeason'); if(n) n.onclick=newSeason;
+  const rb=$('#rebuy'); if(rb) rb.onclick=()=>{ const se=S.season; se.bank=S.cfg.rebuyBank; se.target+=S.cfg.rebuyAdd; se.heat=0; se.doomLeft=0; se.ride=0; se.rideOffer=0; se.rebuyUsed=true; se.rebuyAtGame=se.games.length; se.status='active'; save(); renderAll(); toast('Rebought. Don\'t do it again.'); };
+  const tb=$('#takeBust'); if(tb) tb.onclick=()=>{ S.season.status='full'; save(); renderAll(); };
+}
+function newSeason(){
+  const se=S.season;
+  if(se.games.length) S.history.push(summarize(se));
+  S.season = freshSeason(se.num+1, S.cfg);
+  resetForm(); save(); renderAll(); toast(`Season ${S.season.num} started`);
+}
+
+/* ============ stats ============ */
+function summarize(se){
+  const st = seasonStats(se);
+  return {num:se.num, status:se.status, games:se.games.length, bank:se.bank, peak:se.peak, target:se.target, rebuyUsed:se.rebuyUsed, wins:st.wins, losses:st.losses, endedAt:new Date().toISOString(), log:se.games.map(g=>({...g, snap:undefined}))};
+}
+function seasonStats(se){
+  const g=se.games; const s={wins:0,losses:0,best:0,cur:0,rideW:0,rideL:0,showW:0,showN:0,wallW:0,wallN:0,doomS:0,doomF:0,jackW:0,jackN:0,biggest:null,worst:null};
+  let run=0;
+  g.forEach(x=>{
+    if(x.win){ s.wins++; run++; s.best=Math.max(s.best,run); } else { s.losses++; run=0; }
+    if(x.ride>0){ x.win?s.rideW++:s.rideL++; }
+    if(x.inc==='show'){ s.showN++; if(x.delta>0) s.showW++; }
+    if(x.inc==='wall'){ s.wallN++; if(x.delta>0) s.wallW++; }
+    if(x.inc==='jack'){ s.jackN++; if(x.win) s.jackW++; }
+    if(x.doomNote && x.doomNote.includes('survived')) s.doomS++;
+    if(x.doomNote && x.doomNote.includes('failed')) s.doomF++;
+    const sw = x.after - x.before;
+    if(!s.biggest || sw > s.biggest.v) s.biggest={v:sw,n:x.n};
+    if(!s.worst || sw < s.worst.v) s.worst={v:sw,n:x.n};
+  });
+  s.cur=run; return s;
+}
+function chartSVG(se){
+  const g=se.games; const W=720,H=220,P=32;
+  if(!g.length) return `<div class="empty">The bank chart starts after game 1.</div>`;
+  const pts=[{n:0,b:se.games[0].before}].concat(g.map(x=>({n:x.n,b:x.after})));
+  const maxY=Math.max(se.target, ...pts.map(p=>p.b)); const minY=Math.min(0, ...pts.map(p=>p.b));
+  const cap=seasonCfg(se).cap; const xs=n=>P+(W-2*P)*(n/Math.max(cap,g.length)); const ys=b=>H-P-(H-2*P)*((b-minY)/(maxY-minY||1));
+  const line=pts.map(p=>`${xs(p.n).toFixed(1)},${ys(p.b).toFixed(1)}`).join(' ');
+  const hl=(v,c,l)=>`<line x1="${P}" x2="${W-P}" y1="${ys(v)}" y2="${ys(v)}" stroke="${c}" stroke-dasharray="5 5" opacity=".7"/><text x="${W-P}" y="${ys(v)-6}" text-anchor="end" font-size="12" fill="${c}">${l}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bank over the season">
+    ${hl(se.target,'#3DDC97','Trip '+se.target)}${hl(seasonCfg(se).closeLine,'#B9B2E6','Close call '+seasonCfg(se).closeLine)}${hl(0,'#FF5D73','Bust')}
+    <polyline points="${line}" fill="none" stroke="#FFB627" stroke-width="3" stroke-linejoin="round"/>
+    ${pts.slice(1).map((p,i)=>`<circle cx="${xs(p.n)}" cy="${ys(p.b)}" r="3" fill="${g[i].win?'#3DDC97':'#FF5D73'}"/>`).join('')}
+    <text x="${P}" y="${H-8}" font-size="12" fill="#B9B2E6">Game 0</text><text x="${W-P}" y="${H-8}" text-anchor="end" font-size="12" fill="#B9B2E6">Game ${Math.max(cap,g.length)}</text>
+  </svg>`;
+}
+const ENDNAME = {trip:'Trip',close:'Close call',half:"Time's up",full:'Bust',double:'Double bust',active:'In progress','bust-pending':'Bust (deciding)'};
+function renderStats(){
+  const se=S.season, s=seasonStats(se);
+  const n=se.games.length; const pct = n? Math.round(s.wins/n*100)+'%':'–';
+  const stat=(v,k)=>`<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`;
+  let html = `<h3 class="sec">Season ${se.num}</h3><div class="statgrid">
+    ${stat(`${s.wins}–${s.losses}`,'Record')}${stat(pct,'Win rate')}${stat(se.peak,'Peak bank')}${stat(s.best,'Longest win streak')}
+    ${stat(`${s.rideW}–${s.rideL}`,'Rides won–lost')}${stat(`${s.doomS}–${s.doomF}`,'Doomsdays survived–failed')}
+    ${stat(`${s.showW}/${s.showN}`,`${S.names.a} Shows cashed`)}${stat(`${s.wallW}/${s.wallN}`,'Walls cashed')}
+    ${stat(`${s.jackW}/${s.jackN}`,'Jackpots won')}${stat(s.biggest?sgn(s.biggest.v):'–','Biggest swing up')}${stat(s.worst?sgn(s.worst.v):'–','Biggest swing down')}
+    ${stat(se.rebuyUsed?`Game ${se.rebuyAtGame}`:'No','Rebuy used')}
+  </div><div class="chart">${chartSVG(se)}</div>`;
+
+  const H=S.history; const all=[...H.map(h=>({w:h.wins,l:h.losses,g:h.games})), {w:s.wins,l:s.losses,g:n}];
+  const tw=all.reduce((a,x)=>a+x.w,0), tl=all.reduce((a,x)=>a+x.l,0);
+  const count=k=>H.filter(h=>h.status===k).length;
+  html += `<h3 class="sec">All time</h3><div class="statgrid">
+    ${stat(H.length,'Seasons finished')}${stat(count('trip'),'Trips won')}${stat(count('double'),'Double busts')}${stat(count('full'),'Busts')}
+    ${stat(count('half'),"Time's ups")}${stat(count('close'),'Close calls')}${stat(`${tw}–${tl}`,'Record')}${stat(tw+tl?Math.round(tw/(tw+tl)*100)+'%':'–','Win rate')}
+  </div>`;
+  if(H.length){
+    html += `<div class="tablewrap"><table><thead><tr><th>Season</th><th>Ending</th><th>Games</th><th>Record</th><th>Final</th><th>Peak</th><th>Rebuy</th></tr></thead><tbody>
+      ${H.slice().reverse().map(h=>`<tr><td>${h.num}</td><td>${ENDNAME[h.status]||h.status}</td><td>${h.games}</td><td>${h.wins}–${h.losses}</td><td>${h.bank}</td><td>${h.peak}</td><td>${h.rebuyUsed?'Yes':'No'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  }
+  $('#panel-stats').innerHTML = html;
+}
+
+/* ============ log ============ */
+const RES = {win:'W',loss:'L',ffw:'W (ff)',ffl:'L (ff)'};
+function renderLog(){
+  const se=S.season, g=se.games;
+  if(!g.length){ $('#panel-log').innerHTML = `<div class="empty">No games yet. Spin both wheels on the Play tab to start game 1.</div>`; return; }
+  $('#panel-log').innerHTML = `<div class="btnrow" style="margin-bottom:12px;justify-content:space-between;align-items:center">
+      <span style="color:var(--muted)">Season ${se.num}, ${g.length} game${g.length>1?'s':''}</span>
+      <button class="btn danger" id="undo">Undo game ${g.length}</button></div>
+    <div class="tablewrap"><table><thead><tr><th>#</th><th>Base</th><th>Wheel</th><th>Result</th><th>Score</th><th>Change</th><th>Bank</th><th>Breakdown</th></tr></thead><tbody>
+    ${g.slice().reverse().map(x=>`<tr class="${x.win?'win':'loss'}"><td>${x.n}</td><td>${x.base}</td><td>${incLabel(x.inc)}</td><td>${RES[x.result]}</td>
+      <td>${x.us!==null&&x.them!==null?`${x.us}–${x.them}`:'–'}</td>
+      <td class="${x.after-x.before>=0?'pos':'neg'}"><b>${sgn(x.after-x.before)}</b></td><td>${x.after}</td>
+      <td class="why">${x.parts.map(p=>`${esc(p[0])} ${sgn(p[1])}`).join(', ')}${x.doomNote?`. ${x.doomNote}`:''}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  $('#undo').onclick=()=>{ if(confirm(`Remove game ${g.length} and restore the bank to ${g[g.length-1].before}? The spins for that game stay locked.`)) undoLast(); };
+}
+
+/* ============ rules ============ */
+function renderRules(){
+  const A=S.names.a, B=S.names.b, c=S.cfg;
+  $('#panel-rules').innerHTML = `<div class="rules">
+  <p>One season. ${c.cap} games. Start at ${c.start}. Reach ${c.target} and you take the trip.</p>
+  <h3>How it ends</h3>
+  <ul><li><b>Trip:</b> hit ${c.target} before game ${c.cap} ends. Plan it and take it within one calendar year.</li>
+  <li><b>Bust:</b> hit 0 or below. Full punishment, or rebuy once.</li>
+  <li><b>Time's up:</b> survive ${c.cap} games short of the target. ${c.closeLine}+ is a close call with no punishment. Below ${c.closeLine} is the half punishment.</li></ul>
+  <h3>Before every game</h3>
+  <p>Spin the base, then the wheel. Both get logged before kickoff, and spins can't be redone.</p>
+  <p>Base: 1 point (67%), 2 points (23%), 3 points (10%). Win and you gain the base. Lose and you lose it.</p>
+  <ul>
+  <li><b>Nothing (68%):</b> play it straight.</li>
+  <li><b>Double Up (10%):</b> base × 2, both ways.</li>
+  <li><b>The ${A} Show (8%):</b> ${A} scores every goal. Win: gain ${A}'s goals, max 3. ${B} scores: −3 flat. Lose clean: lose the base.</li>
+  <li><b>The Wall (8%):</b> only ${B} makes saves. Win: gain ${B}'s saves minus goals conceded, min 1, max 3. ${A} saves: −3 flat. Lose clean: lose the base.</li>
+  <li><b>Doomsday (4%):</b> this game plays normally, then you must win the next 2. Win both: bank × 1.5. Lose either: bank halved. Round down. A Doomsday rolled while one is live gets re-rolled.</li>
+  <li><b>Jackpot (2%):</b> +10 or −10.</li></ul>
+  <h3>Every game</h3>
+  <ul><li><b>Bonus:</b> win by 3+ or shut them out: +1. Doesn't stack.</li>
+  <li><b>Penalty:</b> lose by 3+ or get shut out: −1. Doesn't stack.</li>
+  <li><b>Forfeits:</b> they forfeit is a win +1. You forfeit is a loss −1.</li>
+  <li><b>Heat:</b> from your 3rd straight win on, every win pays +1 extra until you lose.</li></ul>
+  <h3>Let it ride</h3>
+  <p>After any win, you can bet that game's whole gain on the next game. Win it and you get the game's points plus the ride. Lose it and you lose the game's points plus the ride. Both of you have to agree, and you call it before the next spins. A winning ride can ride again. No rides while a Doomsday is live.</p>
+  <h3>The rebuy</h3>
+  <p>Once per season, when you bust: bank back to ${c.rebuyBank}, the target goes up by ${c.rebuyAdd}, and busting again means the double punishment.</p>
+  <h3>Table rules</h3>
+  <ul><li>Ranked 2v2 only. No smurfs.</li><li>Write all three punishments down before game 1.</li>
+  <li>No quitting right after a loss or while a Doomsday is live. Everything carries over when you come back.</li><li>Scoreboard credit is final for goals and saves.</li></ul>
+  </div>`;
+}
+
+/* ============ setup ============ */
+function renderSetup(){
+  const se=S.season, locked = se.games.length>0;
+  $('#panel-setup').innerHTML = `<div class="setup">
+    <div class="box"><h3>Players</h3><div class="formgrid">
+      <div class="field"><label for="nA">Scorer (the Show)</label><input type="text" id="nA" value="${esc(S.names.a)}"></div>
+      <div class="field"><label for="nB">Keeper (the Wall)</label><input type="text" id="nB" value="${esc(S.names.b)}"></div></div></div>
+    <div class="box"><h3>Punishments</h3><p class="hint">Write these before game 1. They show up when a season ends.</p>
+      <div class="field"><label for="pHalf">Half: time's up under ${S.cfg.closeLine}</label><textarea id="pHalf">${esc(S.punish.half)}</textarea></div>
+      <div class="field" style="margin-top:10px"><label for="pFull">Full: bust without the rebuy</label><textarea id="pFull">${esc(S.punish.full)}</textarea></div>
+      <div class="field" style="margin-top:10px"><label for="pDouble">Double: bust after the rebuy</label><textarea id="pDouble">${esc(S.punish.double)}</textarea></div></div>
+    <div class="box"><h3>Season settings</h3><p class="hint">${locked?'Locked once a season has games. Changes apply from the next season.':'Applies to this season and the ones after it.'}</p>
+      <div class="formgrid">
+        <div class="field"><label for="cStart">Starting bank</label><input type="number" id="cStart" value="${S.cfg.start}"></div>
+        <div class="field"><label for="cTarget">Trip target</label><input type="number" id="cTarget" value="${S.cfg.target}"></div>
+        <div class="field"><label for="cCap">Games per season</label><input type="number" id="cCap" value="${S.cfg.cap}"></div>
+        <div class="field"><label for="cClose">Close-call line</label><input type="number" id="cClose" value="${S.cfg.closeLine}"></div>
+      </div></div>
+    <div class="box"><h3>Save and sync</h3><p class="hint">Everything is saved in this browser only. Export a file to back it up or to move it to the other person's computer, then import it there.</p>
+      <div class="btnrow"><button class="btn" id="exp">Export save file</button><label class="btn" for="imp" style="cursor:pointer">Import save file</label><input type="file" id="imp" accept="application/json" hidden></div></div>
+    <div class="box"><h3>Danger zone</h3><div class="btnrow">
+      <button class="btn danger" id="endSeason">Abandon season ${se.num}</button><button class="btn danger" id="wipe">Erase everything</button></div></div>
+  </div>`;
+  const bind=(id,fn)=>{ const el=$('#'+id); el.onchange=()=>{ fn(el.value); save(); renderAll(true); toast('Saved'); }; };
+  bind('nA',v=>S.names.a=v.trim()||'Jon'); bind('nB',v=>S.names.b=v.trim()||'Luke');
+  bind('pHalf',v=>S.punish.half=v); bind('pFull',v=>S.punish.full=v); bind('pDouble',v=>S.punish.double=v);
+  const num=(id,k,min)=>bind(id,v=>{ const n=Math.max(min,parseInt(v)||DEFAULTS[k]); S.cfg[k]=n; if(!locked){ if(k==='start'){S.season.bank=n;S.season.peak=n;} if(k==='target') S.season.target=n; if(k==='cap') S.season.cap=n; if(k==='closeLine') S.season.closeLine=n; } });
+  num('cStart','start',1); num('cTarget','target',2); num('cCap','cap',1); num('cClose','closeLine',1);
+  $('#exp').onclick=()=>{ const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`rockopoly-season${S.season.num}-game${S.season.games.length}.json`; a.click(); URL.revokeObjectURL(a.href); };
+  $('#imp').onchange=e=>{ const f=e.target.files[0]; if(!f) return; f.text().then(t=>{ try{ const d=JSON.parse(t); if(!d.season||!d.cfg) throw 0; S=d; save(); renderAll(); toast('Save file loaded'); }catch(_){ toast('That file isn\'t a Rockopoly save'); } }); };
+  $('#endSeason').onclick=()=>{ if(confirm(`Abandon season ${se.num}? It goes into history as abandoned and a new season starts.`)){ if(se.games.length){ se.status='abandoned'; S.history.push(summarize(se)); } S.season=freshSeason(se.num+1,S.cfg); save(); renderAll(); } };
+  $('#wipe').onclick=()=>{ if(confirm('Erase every season, stat and setting? This can\'t be undone.')){ S=freshState(); save(); renderAll(); } };
+}
+ENDNAME.abandoned='Abandoned';
+
+/* ============ tabs + boot ============ */
+let tab='play';
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{ tab=b.dataset.tab; document.querySelectorAll('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', x===b)); document.querySelectorAll('.panel').forEach(p=>p.hidden = p.id!=='panel-'+tab); renderAll(); });
+function renderAll(skipSetup){
+  renderHeader(); renderPlay();
+  if(tab==='log') renderLog();
+  if(tab==='stats') renderStats();
+  if(tab==='rules') renderRules();
+  if(tab==='setup' && !skipSetup) renderSetup();
+}
+load(); renderAll();
+</script>
+</body>
+</html>
